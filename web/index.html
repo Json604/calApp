@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CutLog</title>
+  <style>
+    :root {
+      --bg: #f3efe8;
+      --ink: #1c1914;
+      --muted: #7a7368;
+      --accent: #c45c26;
+      --surface: #fbf8f3;
+      --line: #e2d9cc;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 20px;
+    }
+    main {
+      width: 100%;
+      max-width: 420px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 36px 28px;
+    }
+    .kicker {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    h1 {
+      margin: 8px 0 10px;
+      font-size: 40px;
+      letter-spacing: -1px;
+    }
+    p {
+      color: var(--muted);
+      line-height: 1.5;
+      margin: 0 0 22px;
+    }
+    a.btn {
+      display: block;
+      text-align: center;
+      background: var(--accent);
+      color: #fff;
+      text-decoration: none;
+      font-weight: 600;
+      border-radius: 14px;
+      padding: 16px;
+    }
+    .note {
+      margin-top: 18px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="kicker">Personal cut tracker</div>
+    <h1>CutLog</h1>
+    <p>Android APK for personal use. Food, workouts, activity, and weight — including voice logging.</p>
+    <a class="btn" href="/downloads/cutlog-0.1.0.apk">Download CutLog 0.1.0</a>
+    <p class="note">
+      Android may warn that the app is from outside the Play Store. Allow installs from this browser, then open the file.
+      This build is for you. It is not a public production release.
+    </p>
+  </main>
+</body>
+</html>

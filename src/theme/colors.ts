@@ -1,0 +1,57 @@
+export const palette = {
+  copper: '#C45C26',
+  copperBright: '#E07A3D',
+  ink: '#1C1914',
+  parchment: '#F3EFE8',
+  cream: '#FBF8F3',
+  stone: '#EBE4D8',
+  line: '#E2D9CC',
+  muted: '#7A7368',
+  forest: '#3F6B4F',
+  slate: '#3D6B7A',
+  danger: '#A33B2B',
+};
+
+export const lightColors = {
+  bg: '#F3EFE8',
+  surface: '#FBF8F3',
+  surface2: '#EFE8DC',
+  ink: '#1C1914',
+  muted: '#7A7368',
+  faint: '#A3988B',
+  line: '#E2D9CC',
+  accent: '#C45C26',
+  accentSoft: '#F3D9C8',
+  deficit: '#C45C26',
+  surplus: '#3D6B7A',
+  protein: '#3F6B4F',
+  good: '#3F6B4F',
+  danger: '#A33B2B',
+  tabBar: '#FBF8F3',
+  overlay: 'rgba(28,25,20,0.45)',
+  mic: '#C45C26',
+  cardShadow: 'rgba(28,25,20,0.08)',
+};
+
+export const darkColors = {
+  bg: '#12110E',
+  surface: '#1C1B17',
+  surface2: '#26241F',
+  ink: '#F4EFE6',
+  muted: '#A39B8E',
+  faint: '#7A7368',
+  line: '#2E2C27',
+  accent: '#E07A3D',
+  accentSoft: '#3A271C',
+  deficit: '#E07A3D',
+  surplus: '#7BA8B5',
+  protein: '#8FBF93',
+  good: '#8FBF93',
+  danger: '#E07A6A',
+  tabBar: '#1C1B17',
+  overlay: 'rgba(0,0,0,0.55)',
+  mic: '#E07A3D',
+  cardShadow: 'rgba(0,0,0,0.35)',
+};
+
+export type ThemeColors = typeof lightColors;
