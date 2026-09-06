@@ -36,11 +36,11 @@ Manual logging works with no keys. Voice transcription and semantic parsing need
 
 Personal Android download (after DNS is live):
 
-https://cutlog.kartikey.xyz
+https://calapp.kartikey.xyz
 
 APK:
 
-https://cutlog.kartikey.xyz/downloads/cutlog-0.1.0.apk
+https://calapp.kartikey.xyz/downloads/cutlog-0.1.0.apk
 
 Recording uses `react-native-nitro-sound` (React Native CLI / New Architecture compatible).
 
