@@ -18,6 +18,7 @@ export function SettingsScreen({
   return (
     <Screen>
       <Text style={[styles.title, {color: theme.colors.ink}]}>Settings</Text>
+      <View style={styles.stack}>
       <Card onPress={() => navigation.navigate('Profile')}>
         <Text style={[styles.item, {color: theme.colors.ink}]}>Profile</Text>
         <Text style={[styles.meta, {color: theme.colors.muted}]}>
@@ -90,15 +91,17 @@ export function SettingsScreen({
         variant="secondary"
         onPress={() => navigation.navigate('SavedFoods')}
       />
+      </View>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  title: {fontSize: 32, fontWeight: '600', marginBottom: 16},
+  title: {fontSize: 32, fontWeight: '600', marginBottom: 20},
+  stack: {gap: 16},
   item: {fontSize: 16, fontWeight: '600'},
   meta: {fontSize: 13, marginTop: 4, lineHeight: 18},
-  row: {flexDirection: 'row', gap: 8, marginTop: 12},
-  flex: {flex: 1},
-  disclaimer: {fontSize: 13, lineHeight: 19, marginVertical: 16},
+  row: {flexDirection: 'row', gap: 8, marginTop: 12, flexWrap: 'wrap'},
+  flex: {flex: 1, minWidth: 120},
+  disclaimer: {fontSize: 13, lineHeight: 19, marginVertical: 4},
 });

@@ -1,8 +1,6 @@
-import {Platform} from 'react-native';
 import Sound, {
   AudioEncoderAndroidType,
   AudioSourceAndroidType,
-  AVEncoderAudioQualityIOSType,
   OutputFormatAndroidType,
   type RecordBackType,
 } from 'react-native-nitro-sound';
@@ -12,19 +10,20 @@ export type RecorderState = 'idle' | 'listening' | 'processing';
 export async function startRecording(
   onMeter?: (event: RecordBackType) => void,
 ): Promise<string> {
-  const path = Platform.select({
-    ios: 'cutlog.m4a',
-    android: `${Date.now()}.mp4`,
-    default: 'cutlog.m4a',
-  });
-  const uri = await Sound.startRecorder(path, {
-    AudioEncoderAndroid: AudioEncoderAndroidType.AAC,
-    AudioSourceAndroid: AudioSourceAndroidType.MIC,
-    OutputFormatAndroid: OutputFormatAndroidType.MPEG_4,
-    AVEncoderAudioQualityKeyIOS: AVEncoderAudioQualityIOSType.high,
-    AVNumberOfChannelsKeyIOS: 1,
-    AVFormatIDKeyIOS: 'aac',
-  });
+  // Let nitro-sound pick an app-private absolute path.
+  // A relative filename like "123.mp4" makes MediaRecorder fail on Android.
+  const uri = await Sound.startRecorder(
+    undefined,
+    {
+      AudioEncoderAndroid: AudioEncoderAndroidType.AAC,
+      AudioSourceAndroid: AudioSourceAndroidType.MIC,
+      OutputFormatAndroid: OutputFormatAndroidType.MPEG_4,
+      AudioSamplingRate: 16000,
+      AudioEncodingBitRate: 128000,
+      AudioChannels: 1,
+    },
+    true,
+  );
   Sound.addRecordBackListener((event: RecordBackType) => {
     onMeter?.(event);
   });

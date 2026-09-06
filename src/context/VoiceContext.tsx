@@ -16,7 +16,10 @@ import {
 } from '../components/VoiceRecordingSheet';
 import {parseUserInput, type ParseContext} from '../services/ai/extraction/parser';
 import {createTranscriptionManager} from '../services/ai/transcription/TranscriptionManager';
-import {requestMicrophonePermission} from '../services/voice/permissions';
+import {
+  openAppSettings,
+  requestMicrophonePermission,
+} from '../services/voice/permissions';
 import {
   cancelRecording,
   startRecording,
@@ -160,11 +163,19 @@ export function VoiceProvider({children}: {children: React.ReactNode}) {
   const logAnything = useCallback(
     async (options: VoiceOpenOptions = {}) => {
       optionsRef.current = options;
-      const allowed = await requestMicrophonePermission();
-      if (!allowed) {
+      const permission = await requestMicrophonePermission();
+      if (permission !== 'granted') {
         Alert.alert(
           'Microphone needed',
-          'Enable microphone access to log by voice. Manual logging still works.',
+          permission === 'blocked'
+            ? 'Microphone access is off for CutLog. Enable it in Android settings, then try again.'
+            : 'Enable microphone access to log by voice. Manual logging still works.',
+          permission === 'blocked'
+            ? [
+                {text: 'Not now', style: 'cancel'},
+                {text: 'Open settings', onPress: openAppSettings},
+              ]
+            : [{text: 'OK'}],
         );
         return;
       }
@@ -178,8 +189,10 @@ export function VoiceProvider({children}: {children: React.ReactNode}) {
         timerRef.current = setInterval(() => {
           setSeconds(value => value + 1);
         }, 1000);
-      } catch {
-        setError('Could not start the microphone.');
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : 'Could not start the microphone.';
+        setError(message);
         setUi('error');
         setSheet(true);
       }
