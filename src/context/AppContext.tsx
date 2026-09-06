@@ -27,6 +27,7 @@ import type {
 import {todayKey} from '../utils/dates';
 import {calculateDailyEnergy} from '../utils/energyBalance';
 import {createId} from '../utils/id';
+import {applyCutTargets} from '../utils/tdee';
 
 interface AppState {
   ready: boolean;
@@ -125,8 +126,22 @@ export function AppProvider({
       if (cancelled) {
         return;
       }
+      let goal = loadedGoal;
+      if (loadedProfile && loadedGoal) {
+        const nextGoal = applyCutTargets(loadedProfile, loadedGoal);
+        if (
+          nextGoal.weeklyWeightLossTargetKg !== loadedGoal.weeklyWeightLossTargetKg ||
+          nextGoal.calorieTarget !== loadedGoal.calorieTarget
+        ) {
+          await repositories.profile.saveGoal(nextGoal);
+          goal = nextGoal;
+        }
+      }
+      if (cancelled) {
+        return;
+      }
       setProfile(loadedProfile);
-      setGoal(loadedGoal);
+      setGoal(goal);
       setSettings(loadedSettings);
       setFoods(loadedFoods);
       setSavedFoods(loadedSaved);
@@ -151,8 +166,9 @@ export function AppProvider({
   );
 
   const completeOnboarding = useCallback(async (nextProfile: UserProfile, nextGoal: UserGoal) => {
+    const goalWithTargets = applyCutTargets(nextProfile, nextGoal);
     await repositories.profile.saveProfile(nextProfile);
-    await repositories.profile.saveGoal(nextGoal);
+    await repositories.profile.saveGoal(goalWithTargets);
     await repositories.weight.upsert({
       id: createId(),
       date: todayKey(),
@@ -160,19 +176,25 @@ export function AppProvider({
       source: 'manual',
     });
     setProfile(nextProfile);
-    setGoal(nextGoal);
+    setGoal(goalWithTargets);
     setWeights(await repositories.weight.list());
   }, [repositories]);
 
   const updateProfile = useCallback(async (next: UserProfile) => {
     await repositories.profile.saveProfile(next);
     setProfile(next);
-  }, [repositories]);
+    if (goal) {
+      const nextGoal = applyCutTargets(next, goal);
+      await repositories.profile.saveGoal(nextGoal);
+      setGoal(nextGoal);
+    }
+  }, [goal, repositories]);
 
   const updateGoal = useCallback(async (next: UserGoal) => {
-    await repositories.profile.saveGoal(next);
-    setGoal(next);
-  }, [repositories]);
+    const nextGoal = profile ? applyCutTargets(profile, next) : next;
+    await repositories.profile.saveGoal(nextGoal);
+    setGoal(nextGoal);
+  }, [profile, repositories]);
 
   const updateSettings = useCallback(async (next: AppSettings) => {
     await repositories.settings.save(next);

@@ -8,11 +8,22 @@ import {useApp} from '../../context/AppContext';
 import {useDailySummary} from '../../hooks/useDailySummary';
 import {COMMON_EXERCISES} from '../../constants/exercises';
 import {exerciseHistorySummary} from '../../utils/strengthTrend';
+import {buildCutPlan, loggedWeeklyDeficitKcal} from '../../utils/cutPlan';
 import {formatKcal} from '../../utils/units';
 
 export function ProgressScreen() {
   const {theme, profile, goal, weights, workouts} = useApp();
   const summary = useDailySummary();
+  const plan =
+    profile && goal && summary.progress
+      ? buildCutPlan({
+          profile,
+          goal,
+          energy: summary.energy,
+          remainingKg: summary.progress.remainingKg,
+        })
+      : null;
+  const weeklyLogged = loggedWeeklyDeficitKcal(summary.days);
   const points = [...weights]
     .sort((a, b) => a.date.localeCompare(b.date))
     .slice(-30)
@@ -67,25 +78,34 @@ export function ProgressScreen() {
 
       <SectionHeader title="Last 7 days" />
       <Card>
-        <Row label="Avg intake" value={summary.avgIntake ? formatKcal(summary.avgIntake) : '—'} />
-        <Row label="Avg burn" value={summary.avgBurn ? formatKcal(summary.avgBurn) : '—'} />
+        <Row label="Today intake" value={summary.energy ? formatKcal(summary.energy.caloriesConsumed) : '—'} />
+        <Row label="Today est. burn" value={summary.energy ? formatKcal(summary.energy.estimatedDailyBurn) : '—'} />
         <Row
-          label="Avg deficit"
-          value={
-            summary.avgBalance === null
-              ? '—'
-              : `${Math.abs(summary.avgBalance)} kcal`
-          }
+          label="Logged 7-day deficit"
+          value={weeklyLogged === null ? '—' : formatKcal(weeklyLogged)}
+        />
+        <Row
+          label="Planned weekly deficit"
+          value={plan ? formatKcal(plan.plannedWeeklyDeficitKcal) : '—'}
+        />
+        <Row
+          label="Eat this much less than burn"
+          value={plan ? formatKcal(plan.eatLessThanBurnKcal) : '—'}
+        />
+        <Row
+          label="Kg to goal"
+          value={plan ? `${plan.remainingKg.toFixed(1)} kg` : '—'}
         />
         <Row label="Protein days" value={`${summary.proteinStreak} streak`} />
         <Row label="Workouts" value={`${summary.todayWorkouts.length ? summary.workoutCount : summary.workoutCount}`} />
         <Row
           label="Est. remaining"
-          value={summary.weeksRemaining === null ? '—' : `~${summary.weeksRemaining} weeks`}
+          value={plan?.weeksAtPlan == null ? '—' : `~${plan.weeksAtPlan} weeks`}
         />
         <Text style={[styles.meta, {color: theme.colors.faint, marginTop: 8}]}>
-          Averages skip days with no food logged, so a blank day is not counted as a fast.
-          Energy expenditure and pace are estimates, not measurements.
+          Burn is BMR + everyday movement + logged exercise, not food minus gym.
+          Unlogged days are not counted as a fast. Max planned fat loss is 1 kg/week.
+          Energy figures are estimates.
         </Text>
       </Card>
 

@@ -117,6 +117,16 @@ describe('targets', () => {
     const {baseDailyExpenditure} = calculateBaseDailyExpenditure(body);
     expect(target).toBe(Math.round(baseDailyExpenditure - 550));
   });
+
+  it('caps weekly fat loss at 1 kg and floors male intake at 1500 kcal', () => {
+    expect(Math.round(dailyDeficitFromWeeklyLoss(1))).toBe(1100);
+    expect(Math.round(dailyDeficitFromWeeklyLoss(1.5))).toBe(1100);
+    const aggressive = suggestCalorieTarget({
+      ...body,
+      weeklyWeightLossTargetKg: 1,
+    });
+    expect(aggressive).toBeGreaterThanOrEqual(1500);
+  });
 });
 
 describe('MET calories', () => {

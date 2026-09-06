@@ -10,6 +10,7 @@ import {VoiceButton} from '../../components/VoiceButton';
 import {useApp} from '../../context/AppContext';
 import {useVoice} from '../../context/VoiceContext';
 import {useDailySummary} from '../../hooks/useDailySummary';
+import {buildCutPlan, loggedWeeklyDeficitKcal} from '../../utils/cutPlan';
 import {formatDisplayDate, todayKey} from '../../utils/dates';
 import {formatKcal} from '../../utils/units';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
@@ -20,28 +21,21 @@ export function TodayScreen({
 }: {
   navigation: NativeStackNavigationProp<RootStackParamList>;
 }) {
-  const {theme, settings} = useApp();
+  const {theme, profile, goal} = useApp();
   const {logAnything, offline} = useVoice();
   const summary = useDailySummary();
   const [breakdown, setBreakdown] = useState(false);
   const energy = summary.energy;
-  const foodLogged = Boolean(energy?.foodLogged);
-  const deficitLabel = !energy || !foodLogged
-    ? 'Target'
-    : energy.isDeficit
-      ? 'Deficit'
-      : 'Surplus';
-  const heroValue = !energy
-    ? '—'
-    : !foodLogged
-      ? `${energy.calorieTarget}`
-      : `${Math.abs(energy.balance)}`;
-  const deficitColor =
-    !energy || !foodLogged
-      ? theme.colors.ink
-      : energy.isDeficit
-        ? theme.colors.deficit
-        : theme.colors.surplus;
+  const plan =
+    profile && goal && summary.progress
+      ? buildCutPlan({
+          profile,
+          goal,
+          energy,
+          remainingKg: summary.progress.remainingKg,
+        })
+      : null;
+  const weeklyLogged = loggedWeeklyDeficitKcal(summary.days);
 
   return (
     <Screen>
@@ -56,42 +50,39 @@ export function TodayScreen({
       ) : null}
 
       <Card onPress={() => setBreakdown(value => !value)} style={styles.energy}>
-        <Metric
-          label={deficitLabel}
-          value={heroValue}
-          hint={
-            foodLogged
-              ? 'kcal  ·  estimated'
-              : 'kcal  ·  log food to see today’s deficit'
-          }
-          large
-          color={deficitColor}
-        />
         <View style={styles.split}>
-          <Metric label="Consumed" value={energy ? formatKcal(energy.caloriesConsumed) : '—'} />
-          <Metric label="Estimated burn" value={energy ? formatKcal(energy.estimatedDailyBurn) : '—'} />
+          <Metric
+            label="Intake"
+            value={energy ? formatKcal(energy.caloriesConsumed) : '—'}
+            large
+          />
+          <Metric
+            label="Est. burn today"
+            value={energy ? formatKcal(energy.estimatedDailyBurn) : '—'}
+            large
+          />
         </View>
-        {settings.showLastProvider ? (
-          <Text style={[styles.hint, {color: theme.colors.faint}]}>Tap for energy breakdown</Text>
-        ) : (
-          <Text style={[styles.hint, {color: theme.colors.faint}]}>Tap for energy breakdown</Text>
-        )}
+        <Text style={[styles.hint, {color: theme.colors.muted}]}>
+          Burn = BMR (rest) + everyday movement + logged exercise. Tap for the split.
+        </Text>
         {breakdown && energy ? (
           <View style={styles.break}>
-            <Row label="BMR" value={energy.bmr} />
-            <Row label="Daily movement" value={energy.dailyMovement} />
+            <Row label="BMR (rest)" value={energy.bmr} />
+            <Row label="Everyday movement" value={energy.dailyMovement} />
             <Row label="Workout" value={energy.workoutCalories} />
             <Row label="Activity" value={energy.activityCalories} />
             <Row label="Estimated burn" value={energy.estimatedDailyBurn} bold />
-            <Row label="Food" value={energy.caloriesConsumed} />
+            <Row label="Food intake" value={energy.caloriesConsumed} />
             {energy.foodLogged ? (
               <Row
-                label={energy.isDeficit ? 'Deficit' : 'Surplus'}
+                label={energy.isDeficit ? 'Today’s deficit' : 'Today’s surplus'}
                 value={Math.abs(energy.balance)}
                 bold
               />
             ) : (
-              <Row label="Target" value={energy.calorieTarget} bold />
+              <Text style={[styles.hint, {color: theme.colors.faint}]}>
+                Log food to see today’s deficit. Estimated burn is not a logged cut.
+              </Text>
             )}
           </View>
         ) : null}
@@ -185,19 +176,38 @@ export function TodayScreen({
         ))
       )}
 
-      <Card style={styles.trend}>
-        <Text style={[styles.item, {color: theme.colors.ink}]}>7-day trend</Text>
-        <Text style={[styles.meta, {color: theme.colors.muted}]}>
-          {summary.avgBalance === null
-            ? 'Log a few days to see pace.'
-            : `Your 7-day average ${summary.avgBalance < 0 ? 'deficit' : 'surplus'} is ~${Math.abs(summary.avgBalance)} kcal/day.`}
-        </Text>
-        {summary.weeklyChangeKg !== null ? (
+      {plan ? (
+        <Card style={styles.trend}>
+          <Text style={[styles.item, {color: theme.colors.ink}]}>Cut plan</Text>
           <Text style={[styles.meta, {color: theme.colors.muted}]}>
-            Estimated weight change at this pace: ~{Math.abs(summary.weeklyChangeKg)} kg/week. Estimate only.
+            {profile?.currentWeightKg.toFixed(1)} kg → {goal?.goalWeightKg.toFixed(1)} kg · {plan.remainingKg.toFixed(1)} kg to go
           </Text>
-        ) : null}
-      </Card>
+          <Text style={[styles.meta, {color: theme.colors.muted}]}>
+            Eat about {formatKcal(plan.eatLessThanBurnKcal)} less than today’s estimated burn (food target {formatKcal(plan.eatTargetKcal)}) to lose {plan.plannedWeeklyLossKg} kg/week.
+          </Text>
+          <Text style={[styles.meta, {color: theme.colors.muted}]}>
+            Planned weekly deficit ~{formatKcal(plan.plannedWeeklyDeficitKcal)} ({formatKcal(plan.plannedDailyDeficitKcal)}/day). Max 1 kg/week.
+          </Text>
+          <Text style={[styles.meta, {color: theme.colors.muted}]}>
+            {weeklyLogged === null
+              ? 'Logged weekly deficit: log food this week to measure pace.'
+              : `Logged last 7 days: ~${formatKcal(weeklyLogged)} total deficit across days with food.`}
+          </Text>
+          <Text style={[styles.meta, {color: theme.colors.muted}]}>
+            {plan.weeksAtPlan === null
+              ? 'Goal weight is at or below current.'
+              : `At this planned rate, about ${plan.weeksAtPlan} weeks (~${formatKcal(plan.totalKcalToGoal)} still to cut).`}
+          </Text>
+          {plan.floorBound ? (
+            <Text style={[styles.meta, {color: theme.colors.accent}]}>
+              The food target is floored so intake does not go below a safe minimum. Pace may be slower than {plan.plannedWeeklyLossKg} kg/week.
+            </Text>
+          ) : null}
+          <Text style={[styles.meta, {color: theme.colors.faint}]}>
+            Estimates only. Weight trend over weeks is the real check.
+          </Text>
+        </Card>
+      ) : null}
     </Screen>
   );
 }

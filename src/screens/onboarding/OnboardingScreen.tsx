@@ -4,12 +4,18 @@ import {Button} from '../../components/Button';
 import {Card} from '../../components/Card';
 import {Input} from '../../components/Input';
 import {Screen} from '../../components/Screen';
-import {ACTIVITY_LEVEL_COPY, WEEKLY_LOSS_OPTIONS} from '../../constants/energy';
+import {
+  ACTIVITY_LEVEL_COPY,
+  MAX_WEEKLY_FAT_LOSS_KG,
+  WEEKLY_LOSS_OPTIONS,
+} from '../../constants/energy';
 import {useApp} from '../../context/AppContext';
 import type {ActivityLevel, Sex} from '../../types';
 import {createId} from '../../utils/id';
 import {
   calculateBaseDailyExpenditure,
+  calorieFloorKcal,
+  clampWeeklyLossKg,
   dailyDeficitFromWeeklyLoss,
   suggestCalorieTarget,
   suggestProteinTargetG,
@@ -21,11 +27,11 @@ export function OnboardingScreen() {
   const {theme, completeOnboarding} = useApp();
   const [step, setStep] = useState(0);
   const [name, setName] = useState('');
-  const [age, setAge] = useState('28');
+  const [age, setAge] = useState('');
   const [sex, setSex] = useState<Sex>('male');
-  const [heightCm, setHeightCm] = useState('178');
-  const [weightKg, setWeightKg] = useState('74.8');
-  const [goalKg, setGoalKg] = useState('70');
+  const [heightCm, setHeightCm] = useState('');
+  const [weightKg, setWeightKg] = useState('');
+  const [goalKg, setGoalKg] = useState('');
   const [activityLevel, setActivityLevel] = useState<ActivityLevel>('light');
   const [weekly, setWeekly] = useState(0.5);
   const [protein, setProtein] = useState('');
@@ -36,29 +42,53 @@ export function OnboardingScreen() {
     weightKg: Number(weightKg),
     goalKg: Number(goalKg),
   };
+  const bodyReady =
+    numbers.age >= 14 &&
+    numbers.age <= 90 &&
+    numbers.heightCm >= 120 &&
+    numbers.heightCm <= 230 &&
+    numbers.weightKg >= 35 &&
+    numbers.weightKg <= 250 &&
+    numbers.goalKg >= 35 &&
+    numbers.goalKg < numbers.weightKg;
+
   const suggestedProtein = suggestProteinTargetG(numbers.weightKg || 70);
-  const calorieTarget = useMemo(
-    () =>
-      suggestCalorieTarget({
-        age: numbers.age || 28,
+  const calorieTarget = useMemo(() => {
+    if (!bodyReady) {
+      return 0;
+    }
+    return suggestCalorieTarget({
+      age: numbers.age,
+      sex,
+      heightCm: numbers.heightCm,
+      weightKg: numbers.weightKg,
+      activityLevel,
+      weeklyWeightLossTargetKg: weekly,
+    });
+  }, [activityLevel, bodyReady, numbers.age, numbers.heightCm, numbers.weightKg, sex, weekly]);
+  const base = bodyReady
+    ? calculateBaseDailyExpenditure({
+        age: numbers.age,
         sex,
-        heightCm: numbers.heightCm || 170,
-        weightKg: numbers.weightKg || 70,
+        heightCm: numbers.heightCm,
+        weightKg: numbers.weightKg,
         activityLevel,
-        weeklyWeightLossTargetKg: weekly,
-      }),
-    [activityLevel, numbers.age, numbers.heightCm, numbers.weightKg, sex, weekly],
-  );
-  const base = calculateBaseDailyExpenditure({
-    age: numbers.age || 28,
-    sex,
-    heightCm: numbers.heightCm || 170,
-    weightKg: numbers.weightKg || 70,
-    activityLevel,
-  });
+      })
+    : null;
   const deficit = Math.round(dailyDeficitFromWeeklyLoss(weekly));
+  const floor = calorieFloorKcal(sex);
+
+  const canContinue =
+    step === 0
+      ? numbers.age >= 14 && numbers.age <= 90
+      : step === 1
+        ? bodyReady
+        : true;
 
   const finish = async () => {
+    if (!bodyReady) {
+      return;
+    }
     await completeOnboarding(
       {
         id: createId(),
@@ -73,7 +103,7 @@ export function OnboardingScreen() {
       },
       {
         goalWeightKg: numbers.goalKg,
-        weeklyWeightLossTargetKg: weekly,
+        weeklyWeightLossTargetKg: clampWeeklyLossKg(weekly),
         calorieTarget,
         proteinTargetG: Number(protein) || suggestedProtein,
       },
@@ -87,19 +117,25 @@ export function OnboardingScreen() {
         {step === 0
           ? 'About you'
           : step === 1
-            ? 'Body'
+            ? 'Height, weight, goal'
             : step === 2
               ? 'Everyday movement'
               : 'Your cut'}
       </Text>
       <Text style={[styles.sub, {color: theme.colors.muted}]}>
-        Local estimates only. You can change every target later.
+        Height is required for BMR. Local estimates only — you can change targets later.
       </Text>
 
       {step === 0 ? (
         <View style={styles.stack}>
           <Input label="Name (optional)" value={name} onChangeText={setName} />
-          <Input label="Age" value={age} onChangeText={setAge} keyboardType="number-pad" />
+          <Input
+            label="Age (required)"
+            value={age}
+            onChangeText={setAge}
+            keyboardType="number-pad"
+            placeholder="e.g. 28"
+          />
           <View style={styles.row}>
             {(['male', 'female'] as Sex[]).map(option => (
               <Chip
@@ -115,9 +151,30 @@ export function OnboardingScreen() {
 
       {step === 1 ? (
         <View style={styles.stack}>
-          <Input label="Height (cm)" value={heightCm} onChangeText={setHeightCm} keyboardType="decimal-pad" />
-          <Input label="Current weight (kg)" value={weightKg} onChangeText={setWeightKg} keyboardType="decimal-pad" />
-          <Input label="Goal weight (kg)" value={goalKg} onChangeText={setGoalKg} keyboardType="decimal-pad" />
+          <Input
+            label="Height (cm) — required"
+            value={heightCm}
+            onChangeText={setHeightCm}
+            keyboardType="decimal-pad"
+            placeholder="e.g. 178"
+          />
+          <Input
+            label="Current weight (kg) — required"
+            value={weightKg}
+            onChangeText={setWeightKg}
+            keyboardType="decimal-pad"
+            placeholder="e.g. 74.8"
+          />
+          <Input
+            label="Goal weight (kg) — required"
+            value={goalKg}
+            onChangeText={setGoalKg}
+            keyboardType="decimal-pad"
+            placeholder="must be below current weight"
+          />
+          <Text style={[styles.desc, {color: theme.colors.faint}]}>
+            Mifflin-St Jeor BMR uses weight, height, age, and sex. Without height the burn estimate is wrong.
+          </Text>
         </View>
       ) : null}
 
@@ -135,13 +192,17 @@ export function OnboardingScreen() {
             </Card>
           ))}
           <Text style={[styles.desc, {color: theme.colors.faint}]}>
-            This is everyday movement, not gym sessions. Logged workouts are added on top so exercise is not counted twice.
+            This is non-exercise movement (NEAT): job, walking, standing. It is not gym time.
+            Logged workouts are added on top so exercise is not counted twice.
           </Text>
         </View>
       ) : null}
 
       {step === 3 ? (
         <View style={styles.stack}>
+          <Text style={[styles.desc, {color: theme.colors.muted}]}>
+            Maximum planned fat loss is {MAX_WEEKLY_FAT_LOSS_KG} kg/week.
+          </Text>
           <View style={styles.row}>
             {WEEKLY_LOSS_OPTIONS.map(option => (
               <Chip
@@ -154,14 +215,17 @@ export function OnboardingScreen() {
           </View>
           <Card>
             <Text style={[styles.choice, {color: theme.colors.ink}]}>
-              Estimated daily deficit {deficit} kcal
+              Planned daily deficit {deficit} kcal
             </Text>
             <Text style={[styles.desc, {color: theme.colors.muted}]}>
-              7700 kcal ≈ 1 kg fat, so {weekly} kg/week is about {deficit} kcal/day. This is only an estimate.
+              ~7700 kcal ≈ 1 kg fat, so {weekly} kg/week is about {deficit} kcal/day below estimated burn. Estimate only.
             </Text>
-            <Text style={[styles.desc, {color: theme.colors.muted}]}>
-              Base burn without workouts: {Math.round(base.baseDailyExpenditure)} kcal. Suggested food target: {calorieTarget} kcal. Protein default {suggestedProtein} g (about 2.0 g/kg).
-            </Text>
+            {base ? (
+              <Text style={[styles.desc, {color: theme.colors.muted}]}>
+                BMR {Math.round(base.bmr)} kcal + daily movement {Math.round(base.dailyMovement)} kcal = {Math.round(base.baseDailyExpenditure)} kcal living burn (no gym).
+                Food target {calorieTarget} kcal (floor {floor} kcal). Protein default {suggestedProtein} g (~2.0 g/kg).
+              </Text>
+            ) : null}
           </Card>
           <Input
             label="Protein target (g), optional"
@@ -181,9 +245,13 @@ export function OnboardingScreen() {
         ) : null}
         <View style={styles.flex}>
           {step < 3 ? (
-            <Button label="Continue" onPress={() => setStep(step + 1)} />
+            <Button
+              label="Continue"
+              disabled={!canContinue}
+              onPress={() => setStep(step + 1)}
+            />
           ) : (
-            <Button label="Start logging" onPress={finish} />
+            <Button label="Start logging" disabled={!bodyReady} onPress={finish} />
           )}
         </View>
       </View>

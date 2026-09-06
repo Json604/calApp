@@ -40,7 +40,7 @@ https://cutlog.kartikey.xyz
 
 APK:
 
-https://cutlog.kartikey.xyz/downloads/cutlog-1.3.apk
+https://cutlog.kartikey.xyz/downloads/cutlog-1.4.apk
 
 After 1.1 is installed, the app checks `https://cutlog.kartikey.xyz/downloads/latest.json` on launch and offers to install newer APKs.
 
@@ -72,14 +72,14 @@ npm run lint
 
 CutLog does **not** compute deficit as food minus workout calories.
 
-1. BMR via Mifflin-St Jeor
-2. Base daily expenditure = BMR × everyday-movement multiplier (NEAT, not gym)
-3. Estimated burn = base daily expenditure + logged workout/activity calories
-4. Balance = calories eaten − estimated burn
+1. BMR via Mifflin-St Jeor (weight, **height**, age, sex)
+2. Living burn = BMR × everyday-movement multiplier (NEAT / occupation, **not** gym). Classic TDEE multipliers like 1.55 already include typical workouts; using those *and* adding gym calories would double-count.
+3. Estimated burn today = living burn + logged workout/activity (MET × kg × hours)
+4. Balance = calories eaten − estimated burn, and only on days with food logged
+5. Food target = living burn − planned deficit, floored at 1500 kcal (male) or 1200 kcal (female)
+6. Planned fat loss is capped at **1 kg/week** (~1100 kcal/day). 7700 kcal ≈ 1 kg fat is an estimate.
 
-Activity level describes non-exercise movement so logged exercise is not double-counted.
-
-7700 kcal ≈ 1 kg fat is used only for estimates.
+Activity level must describe walking/standing/job, not how hard you train.
 
 ## Voice pipeline
 

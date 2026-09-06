@@ -38,7 +38,7 @@ export function SettingsScreen({
       <Card onPress={() => navigation.navigate('Profile')}>
         <Text style={[styles.item, {color: theme.colors.ink}]}>Profile</Text>
         <Text style={[styles.meta, {color: theme.colors.muted}]}>
-          {profile?.name ?? 'Unnamed'} · {profile?.age} · {profile?.currentWeightKg} kg
+          {profile?.name ?? 'Unnamed'} · {profile?.age} · {profile?.heightCm} cm · {profile?.currentWeightKg} kg
         </Text>
       </Card>
       <Card onPress={() => navigation.navigate('Goals')}>

@@ -1,9 +1,18 @@
 import type {ActivityLevel} from '../types';
 
-/** Approximate kcal in 1 kg of body fat. */
+/** Approximate kcal stored in 1 kg of body fat (Wishnofsky). Estimate only. */
 export const KCAL_PER_KG_FAT = 7700;
 
-export const WEEKLY_LOSS_OPTIONS = [0.25, 0.5, 0.75] as const;
+/** NHS/CDC-style upper bound for a self-directed cut. */
+export const MAX_WEEKLY_FAT_LOSS_KG = 1;
+export const MIN_WEEKLY_FAT_LOSS_KG = 0.25;
+
+export const WEEKLY_LOSS_OPTIONS = [0.25, 0.5, 0.75, 1] as const;
+
+export const CALORIE_FLOOR_KCAL = {
+  male: 1500,
+  female: 1200,
+} as const;
 
 /**
  * Non-exercise activity multipliers.
