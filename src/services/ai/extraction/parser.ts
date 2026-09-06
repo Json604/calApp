@@ -6,6 +6,7 @@ import type {
 } from '../../../types';
 import {canonicalExerciseName} from '../../matching/exerciseMatch';
 import {enrichDraftItem} from '../../matching/foodMatch';
+import {lookupFoodNutrition} from '../../nutrition/lookup';
 import {tryLocalCommand, type LocalCommandContext} from '../../matching/localCommands';
 import {
   parseFieldValue,
@@ -155,7 +156,12 @@ async function parseWithAi(
     intent: outcome.data.intent as Intent,
   });
   try {
-    return toParsed(text, outcome.data, outcome.provider, context.savedFoods ?? []);
+    return await toParsed(
+      text,
+      outcome.data,
+      outcome.provider,
+      context.savedFoods ?? [],
+    );
   } catch (error) {
     return unknown(
       text,
@@ -229,33 +235,39 @@ function buildUserPayload(text: string, context: ParseContext): string {
   return lines.join('\n');
 }
 
-function toParsed(
+async function toParsed(
   transcript: string,
   data: unknown,
   provider: ProviderId,
   savedFoods: SavedFood[],
-): ParsedUserInput {
+): Promise<ParsedUserInput> {
   const parsed = UniversalExtractionSchema.parse(data);
   switch (parsed.intent) {
     case 'food': {
-      const items: DraftFoodItem[] = parsed.items.map(item =>
-        enrichDraftItem(
-          {
-            name: item.name,
-            quantity: item.quantity,
-            unit: item.unit,
-            calories: item.estimatedCalories ?? null,
-            protein: item.protein ?? null,
-            carbs: item.carbs ?? null,
-            fat: item.fat ?? null,
-            confidence: item.confidence ?? parsed.confidence,
-            estimated: !item.estimatedCalories ? true : true,
-            warning:
-              item.warning ??
-              (item.quantity === null ? 'Serving size unclear' : undefined),
-          },
-          savedFoods,
-        ),
+      const items: DraftFoodItem[] = await Promise.all(
+        parsed.items.map(async item => {
+          const draft = enrichDraftItem(
+            {
+              name: item.name,
+              quantity: item.quantity,
+              unit: item.unit,
+              calories: item.estimatedCalories ?? null,
+              protein: item.protein ?? null,
+              carbs: item.carbs ?? null,
+              fat: item.fat ?? null,
+              confidence: item.confidence ?? parsed.confidence,
+              estimated: true,
+              warning:
+                item.warning ??
+                (item.quantity === null ? 'Serving size unclear' : undefined),
+            },
+            savedFoods,
+          );
+          if (draft.calories != null && draft.calories > 0) {
+            return draft;
+          }
+          return lookupFoodNutrition(draft);
+        }),
       );
       return {
         intent: 'food',

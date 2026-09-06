@@ -40,7 +40,7 @@ https://cutlog.kartikey.xyz
 
 APK:
 
-https://cutlog.kartikey.xyz/downloads/cutlog-1.4.apk
+https://cutlog.kartikey.xyz/downloads/cutlog-1.5.apk
 
 After 1.1 is installed, the app checks `https://cutlog.kartikey.xyz/downloads/latest.json` on launch and offers to install newer APKs.
 

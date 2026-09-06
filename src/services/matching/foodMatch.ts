@@ -46,6 +46,25 @@ function tokenOverlap(a: string, b: string): number {
   return hit / Math.max(aTokens.size, bTokens.size);
 }
 
+/** True when the model returned per-unit calories for a multi-unit quantity. */
+export function shouldPreferScaledDatabase(params: {
+  reportedCalories: number | null | undefined;
+  quantity: number;
+  dbCalories: number;
+  dbPerQuantity: number;
+}): boolean {
+  const scaled = params.dbCalories * (params.quantity / params.dbPerQuantity);
+  if (params.reportedCalories == null || params.reportedCalories <= 0) {
+    return true;
+  }
+  const perDbErr =
+    Math.abs(params.reportedCalories - params.dbCalories) /
+    Math.max(params.dbCalories, 1);
+  const scaledErr =
+    Math.abs(params.reportedCalories - scaled) / Math.max(scaled, 1);
+  return perDbErr <= 0.3 && scaledErr > 0.3;
+}
+
 export function scaleNutrition(
   per: {calories: number; protein: number; carbs: number; fat: number; perQuantity: number},
   quantity: number,
@@ -134,16 +153,15 @@ export function enrichDraftItem(
       },
       qty,
     );
-    const hasAiMacros = item.calories !== null && item.calories !== undefined;
     return {
       ...item,
       name: common.food.name,
       quantity: qty,
       unit: item.unit || common.food.unit,
-      calories: hasAiMacros ? item.calories : macros.calories,
-      protein: hasAiMacros ? item.protein : macros.protein,
-      carbs: hasAiMacros ? item.carbs : macros.carbs,
-      fat: hasAiMacros ? item.fat : macros.fat,
+      calories: macros.calories,
+      protein: macros.protein,
+      carbs: macros.carbs,
+      fat: macros.fat,
       estimated: true,
       confidence: Math.max(item.confidence, common.score * 0.9),
     };

@@ -2,7 +2,6 @@ import React, {useState} from 'react';
 import {Pressable, StyleSheet, Text, View} from 'react-native';
 import {Card} from '../../components/Card';
 import {EmptyState} from '../../components/EmptyState';
-import {Metric} from '../../components/Metric';
 import {ProgressBar} from '../../components/ProgressBar';
 import {Screen} from '../../components/Screen';
 import {SectionHeader} from '../../components/SectionHeader';
@@ -51,19 +50,29 @@ export function TodayScreen({
 
       <Card onPress={() => setBreakdown(value => !value)} style={styles.energy}>
         <View style={styles.split}>
-          <Metric
-            label="Intake"
-            value={energy ? formatKcal(energy.caloriesConsumed) : '—'}
-            large
-          />
-          <Metric
-            label="Est. burn today"
-            value={energy ? formatKcal(energy.estimatedDailyBurn) : '—'}
-            large
-          />
+          <View style={styles.energyCol}>
+            <Text style={[styles.energyLabel, {color: theme.colors.muted}]}>Intake</Text>
+            <Text
+              style={[styles.energyValue, {color: theme.colors.ink}]}
+              numberOfLines={1}
+              adjustsFontSizeToFit>
+              {energy ? Math.round(energy.caloriesConsumed).toLocaleString('en-US') : '—'}
+            </Text>
+            <Text style={[styles.energyUnit, {color: theme.colors.faint}]}>kcal eaten</Text>
+          </View>
+          <View style={styles.energyCol}>
+            <Text style={[styles.energyLabel, {color: theme.colors.muted}]}>Est. burn</Text>
+            <Text
+              style={[styles.energyValue, {color: theme.colors.ink}]}
+              numberOfLines={1}
+              adjustsFontSizeToFit>
+              {energy ? Math.round(energy.estimatedDailyBurn).toLocaleString('en-US') : '—'}
+            </Text>
+            <Text style={[styles.energyUnit, {color: theme.colors.faint}]}>kcal today</Text>
+          </View>
         </View>
         <Text style={[styles.hint, {color: theme.colors.muted}]}>
-          Burn = BMR (rest) + everyday movement + logged exercise. Tap for the split.
+          Burn = rest (BMR) + everyday movement + logged exercise. Tap for the split.
         </Text>
         {breakdown && energy ? (
           <View style={styles.break}>
@@ -87,6 +96,36 @@ export function TodayScreen({
           </View>
         ) : null}
       </Card>
+
+      {plan ? (
+        <Card style={styles.trend}>
+          <Text style={[styles.item, {color: theme.colors.ink}]}>Cut plan</Text>
+          <Text style={[styles.meta, {color: theme.colors.muted}]}>
+            {profile?.currentWeightKg.toFixed(1)} kg → {goal?.goalWeightKg.toFixed(1)} kg · {plan.remainingKg.toFixed(1)} kg to go
+          </Text>
+          <Text style={[styles.meta, {color: theme.colors.muted}]}>
+            Eat about {formatKcal(plan.eatLessThanBurnKcal)} less than today’s burn (target {formatKcal(plan.eatTargetKcal)}) to lose {plan.plannedWeeklyLossKg} kg/week.
+          </Text>
+          <Text style={[styles.meta, {color: theme.colors.muted}]}>
+            Planned weekly deficit ~{formatKcal(plan.plannedWeeklyDeficitKcal)} ({formatKcal(plan.plannedDailyDeficitKcal)}/day). Max 1 kg/week.
+          </Text>
+          <Text style={[styles.meta, {color: theme.colors.muted}]}>
+            {weeklyLogged === null
+              ? 'Logged weekly deficit: log food this week to measure pace.'
+              : `Logged last 7 days: ~${formatKcal(weeklyLogged)} total deficit across days with food.`}
+          </Text>
+          <Text style={[styles.meta, {color: theme.colors.muted}]}>
+            {plan.weeksAtPlan === null
+              ? 'Goal weight is at or below current.'
+              : `At this planned rate, about ${plan.weeksAtPlan} weeks (~${formatKcal(plan.totalKcalToGoal)} still to cut).`}
+          </Text>
+          {plan.floorBound ? (
+            <Text style={[styles.meta, {color: theme.colors.accent}]}>
+              The food target is floored so intake does not go below a safe minimum. Pace may be slower than {plan.plannedWeeklyLossKg} kg/week.
+            </Text>
+          ) : null}
+        </Card>
+      ) : null}
 
       {energy ? (
         <View style={styles.bars}>
@@ -176,38 +215,6 @@ export function TodayScreen({
         ))
       )}
 
-      {plan ? (
-        <Card style={styles.trend}>
-          <Text style={[styles.item, {color: theme.colors.ink}]}>Cut plan</Text>
-          <Text style={[styles.meta, {color: theme.colors.muted}]}>
-            {profile?.currentWeightKg.toFixed(1)} kg → {goal?.goalWeightKg.toFixed(1)} kg · {plan.remainingKg.toFixed(1)} kg to go
-          </Text>
-          <Text style={[styles.meta, {color: theme.colors.muted}]}>
-            Eat about {formatKcal(plan.eatLessThanBurnKcal)} less than today’s estimated burn (food target {formatKcal(plan.eatTargetKcal)}) to lose {plan.plannedWeeklyLossKg} kg/week.
-          </Text>
-          <Text style={[styles.meta, {color: theme.colors.muted}]}>
-            Planned weekly deficit ~{formatKcal(plan.plannedWeeklyDeficitKcal)} ({formatKcal(plan.plannedDailyDeficitKcal)}/day). Max 1 kg/week.
-          </Text>
-          <Text style={[styles.meta, {color: theme.colors.muted}]}>
-            {weeklyLogged === null
-              ? 'Logged weekly deficit: log food this week to measure pace.'
-              : `Logged last 7 days: ~${formatKcal(weeklyLogged)} total deficit across days with food.`}
-          </Text>
-          <Text style={[styles.meta, {color: theme.colors.muted}]}>
-            {plan.weeksAtPlan === null
-              ? 'Goal weight is at or below current.'
-              : `At this planned rate, about ${plan.weeksAtPlan} weeks (~${formatKcal(plan.totalKcalToGoal)} still to cut).`}
-          </Text>
-          {plan.floorBound ? (
-            <Text style={[styles.meta, {color: theme.colors.accent}]}>
-              The food target is floored so intake does not go below a safe minimum. Pace may be slower than {plan.plannedWeeklyLossKg} kg/week.
-            </Text>
-          ) : null}
-          <Text style={[styles.meta, {color: theme.colors.faint}]}>
-            Estimates only. Weight trend over weeks is the real check.
-          </Text>
-        </Card>
-      ) : null}
     </Screen>
   );
 }
@@ -256,8 +263,22 @@ const styles = StyleSheet.create({
   kicker: {fontSize: 12, fontWeight: '700', letterSpacing: 1.2, textTransform: 'uppercase'},
   date: {fontSize: 28, fontWeight: '600', letterSpacing: -0.6, marginBottom: 16},
   offline: {marginBottom: 12, fontSize: 13},
-  energy: {gap: 16, marginBottom: 18},
-  split: {flexDirection: 'row', justifyContent: 'space-between'},
+  energy: {gap: 12, marginBottom: 18},
+  split: {flexDirection: 'row', gap: 12},
+  energyCol: {flex: 1, minWidth: 0},
+  energyLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+  },
+  energyValue: {
+    fontSize: 32,
+    fontWeight: '600',
+    letterSpacing: -0.8,
+    marginTop: 4,
+  },
+  energyUnit: {fontSize: 13, marginTop: 2},
   hint: {fontSize: 13},
   break: {gap: 8, paddingTop: 8},
   bars: {gap: 14, marginBottom: 16},
@@ -277,5 +298,5 @@ const styles = StyleSheet.create({
   row: {flexDirection: 'row', justifyContent: 'space-between'},
   item: {fontSize: 16, fontWeight: '600'},
   meta: {fontSize: 13, marginTop: 4},
-  trend: {marginTop: 12, gap: 6},
+  trend: {marginBottom: 16, gap: 6},
 });
