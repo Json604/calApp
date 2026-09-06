@@ -40,7 +40,9 @@ https://cutlog.kartikey.xyz
 
 APK:
 
-https://cutlog.kartikey.xyz/downloads/cutlog-0.1.0.apk
+https://cutlog.kartikey.xyz/downloads/cutlog-1.1.apk
+
+After 1.1 is installed, the app checks `https://cutlog.kartikey.xyz/downloads/latest.json` on launch and offers to install newer APKs.
 
 Recording uses `react-native-nitro-sound` (React Native CLI / New Architecture compatible).
 

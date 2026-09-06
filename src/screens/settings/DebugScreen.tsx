@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import {StyleSheet, Text} from 'react-native';
 import {Card} from '../../components/Card';
 import {Screen} from '../../components/Screen';
@@ -6,14 +6,20 @@ import {aiEnv} from '../../config/env';
 import {STORAGE_SCHEMA_VERSION} from '../../constants/energy';
 import {useApp} from '../../context/AppContext';
 import {getAiDebugState} from '../../services/ai';
+import {currentVersion} from '../../update/updateChecker';
 
 export function DebugScreen() {
   const {theme, settings} = useApp();
   const debug = getAiDebugState();
+  const [versionName, setVersionName] = useState('');
+  useEffect(() => {
+    void currentVersion().then(setVersionName);
+  }, []);
   return (
     <Screen>
       <Text style={[styles.title, {color: theme.colors.ink}]}>Developer</Text>
       <Card>
+        <Line label="App version" value={versionName || '—'} />
         <Line label="Storage schema" value={String(STORAGE_SCHEMA_VERSION)} />
         <Line label="Primary" value={settings.primaryProvider} />
         <Line label="Fallback" value={settings.fallbackProvider} />

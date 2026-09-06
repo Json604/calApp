@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import {StyleSheet, Text, View} from 'react-native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {Button} from '../../components/Button';
@@ -8,6 +8,7 @@ import {aiEnv} from '../../config/env';
 import {useApp} from '../../context/AppContext';
 import type {RootStackParamList} from '../../navigation/types';
 import type {ThemePreference} from '../../types';
+import {checkForUpdate, currentVersion} from '../../update/updateChecker';
 
 export function SettingsScreen({
   navigation,
@@ -15,6 +16,10 @@ export function SettingsScreen({
   navigation: NativeStackNavigationProp<RootStackParamList>;
 }) {
   const {theme, settings, updateSettings, profile, goal} = useApp();
+  const [versionName, setVersionName] = useState('');
+  useEffect(() => {
+    void currentVersion().then(setVersionName);
+  }, []);
   return (
     <Screen>
       <Text style={[styles.title, {color: theme.colors.ink}]}>Settings</Text>
@@ -81,6 +86,22 @@ export function SettingsScreen({
           variant="ghost"
           onPress={() => updateSettings({...settings, showLastProvider: !settings.showLastProvider})}
         />
+      </Card>
+      <Card>
+        <Text style={[styles.item, {color: theme.colors.ink}]}>Updates</Text>
+        <Text style={[styles.meta, {color: theme.colors.muted}]}>
+          {versionName ? `Installed version ${versionName}` : 'Checking version…'}
+          . CutLog looks for a newer APK when you open the app.
+        </Text>
+        <View style={{marginTop: 12}}>
+          <Button
+            label="Check for updates"
+            variant="secondary"
+            onPress={() => {
+              void checkForUpdate({silent: false});
+            }}
+          />
+        </View>
       </Card>
       <Text style={[styles.disclaimer, {color: theme.colors.faint}]}>
         Energy expenditure and AI nutrition values are estimates. API keys in a mobile app are not secure; a public version should proxy Groq/NVIDIA through a backend.
