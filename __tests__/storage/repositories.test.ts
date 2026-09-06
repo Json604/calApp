@@ -35,4 +35,22 @@ describe('local repositories', () => {
     expect(foods).toHaveLength(1);
     expect(foods[0].name).toBe('Egg');
   });
+
+  it('stores API keys in settings on the device, not from env', async () => {
+    const repos = createRepositories(memoryStore());
+    await repos.migrate();
+    const initial = await repos.settings.get();
+    expect(initial.groqApiKey).toBe('');
+    expect(initial.nvidiaApiKey).toBe('');
+
+    await repos.settings.save({
+      ...initial,
+      groqApiKey: 'gsk_test_key_value',
+      nvidiaApiKey: 'nvapi-test-key-value',
+    });
+    const loaded = await repos.settings.get();
+    expect(loaded.groqApiKey).toBe('gsk_test_key_value');
+    expect(loaded.nvidiaApiKey).toBe('nvapi-test-key-value');
+  });
 });
+

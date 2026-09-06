@@ -16,9 +16,9 @@ describe('loadAiEnvConfig', () => {
     expect(DEFAULT_GROQ_TEXT_MODEL).toContain('llama');
   });
 
-  it('treats API keys as strings (empty in tests, inlined in release)', () => {
-    const config = loadAiEnvConfig();
-    expect(typeof config.groqApiKey).toBe('string');
-    expect(typeof config.nvidiaApiKey).toBe('string');
+  it('does not load API keys from the bundle env', () => {
+    const config = loadAiEnvConfig() as unknown as Record<string, unknown>;
+    expect(config).not.toHaveProperty('groqApiKey');
+    expect(config).not.toHaveProperty('nvidiaApiKey');
   });
 });

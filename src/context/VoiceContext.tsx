@@ -152,7 +152,8 @@ export function VoiceProvider({children}: {children: React.ReactNode}) {
           ? err.message
           : 'Voice capture failed. You can still log this manually.';
       setError(
-        /not configured|network|timeout|unavailable/i.test(message)
+        /network|timeout|unavailable/i.test(message) &&
+          !/not configured/i.test(message)
           ? 'AI parsing is temporarily unavailable. You can still log this manually.'
           : message,
       );

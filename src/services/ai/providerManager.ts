@@ -148,7 +148,7 @@ function asFailure(error: unknown, provider: ProviderId): ProviderFailure {
 
 function userFacing(message: string): string {
   if (/not configured/i.test(message)) {
-    return 'AI is not configured. Add API keys in Settings or the .env file.';
+    return 'AI is not configured. Add API keys in Settings.';
   }
   return 'AI parsing is temporarily unavailable. You can still log this manually.';
 }

@@ -1,19 +1,24 @@
 import {aiEnv} from '../../config/env';
 import type {AppSettings} from '../../types';
+import {trimSecret} from '../../utils/secrets';
 import {GroqProvider} from './groq/GroqProvider';
 import {NvidiaProvider} from './nvidia/NvidiaProvider';
 import {ProviderManager} from './providerManager';
 import type {GenerateStructuredOptions, GenerateStructuredOutcome} from './types';
 
-let settingsOverride: Pick<AppSettings, 'primaryProvider' | 'fallbackProvider' | 'groqTextModel' | 'nvidiaTextModel'> | null =
-  null;
+type AiRuntimeSettings = Pick<
+  AppSettings,
+  | 'primaryProvider'
+  | 'fallbackProvider'
+  | 'groqTextModel'
+  | 'nvidiaTextModel'
+  | 'groqApiKey'
+  | 'nvidiaApiKey'
+>;
 
-export function configureAiFromSettings(
-  settings: Pick<
-    AppSettings,
-    'primaryProvider' | 'fallbackProvider' | 'groqTextModel' | 'nvidiaTextModel'
-  >,
-): void {
+let settingsOverride: AiRuntimeSettings | null = null;
+
+export function configureAiFromSettings(settings: AiRuntimeSettings): void {
   settingsOverride = settings;
 }
 
@@ -21,11 +26,11 @@ function manager(): ProviderManager {
   const primary = settingsOverride?.primaryProvider ?? aiEnv.primaryProvider;
   const fallback = settingsOverride?.fallbackProvider ?? aiEnv.fallbackProvider;
   const groq = new GroqProvider(
-    aiEnv.groqApiKey,
+    trimSecret(settingsOverride?.groqApiKey),
     settingsOverride?.groqTextModel ?? aiEnv.groqTextModel,
   );
   const nvidia = new NvidiaProvider(
-    aiEnv.nvidiaApiKey,
+    trimSecret(settingsOverride?.nvidiaApiKey),
     settingsOverride?.nvidiaTextModel ?? aiEnv.nvidiaTextModel,
     aiEnv.nvidiaBaseUrl,
   );

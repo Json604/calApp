@@ -7,7 +7,7 @@ export class NvidiaProvider implements AIProvider {
   readonly id = 'nvidia' as const;
 
   constructor(
-    private readonly apiKey = aiEnv.nvidiaApiKey,
+    private readonly apiKey = '',
     private readonly model = aiEnv.nvidiaTextModel,
     private readonly baseUrl = aiEnv.nvidiaBaseUrl,
   ) {}

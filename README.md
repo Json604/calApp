@@ -6,7 +6,9 @@ This is a React Native CLI app (not Expo).
 
 ## Important: API keys
 
-API keys shipped inside a mobile app can be extracted from the package. Direct Groq/NVIDIA calls from the client are acceptable for this personal prototype. A production or public version should proxy those requests through a backend or secure gateway.
+Paste Groq (and optionally NVIDIA) keys in **Settings → AI keys**. They stay in on-device storage and are not compiled into the APK.
+
+A rooted phone can still read local storage. A production or public version should proxy Groq/NVIDIA through a backend.
 
 Never commit a real `.env`.
 
@@ -17,14 +19,12 @@ npm install
 cp .env.example .env
 ```
 
-Fill in keys as needed:
+Model names can stay as-is:
 
 ```
-GROQ_API_KEY=
 GROQ_TEXT_MODEL=llama-3.1-8b-instant
 GROQ_TRANSCRIPTION_MODEL=whisper-large-v3-turbo
 
-NVIDIA_API_KEY=
 NVIDIA_BASE_URL=https://integrate.api.nvidia.com/v1
 NVIDIA_TEXT_MODEL=meta/llama-3.1-8b-instruct
 
@@ -32,7 +32,7 @@ AI_PRIMARY_PROVIDER=groq
 AI_FALLBACK_PROVIDER=nvidia
 ```
 
-Manual logging works with no keys. Voice transcription and semantic parsing need Groq (primary). NVIDIA is the text-parsing fallback.
+Manual logging works with no keys. Voice transcription needs a Groq key in Settings. NVIDIA is the optional text-parsing fallback.
 
 Personal Android download (after DNS is live):
 
@@ -40,7 +40,7 @@ https://cutlog.kartikey.xyz
 
 APK:
 
-https://cutlog.kartikey.xyz/downloads/cutlog-1.1.apk
+https://cutlog.kartikey.xyz/downloads/cutlog-1.2.apk
 
 After 1.1 is installed, the app checks `https://cutlog.kartikey.xyz/downloads/latest.json` on launch and offers to install newer APKs.
 

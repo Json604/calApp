@@ -3,12 +3,13 @@ import {StyleSheet, Text, View} from 'react-native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {Button} from '../../components/Button';
 import {Card} from '../../components/Card';
+import {Input} from '../../components/Input';
 import {Screen} from '../../components/Screen';
-import {aiEnv} from '../../config/env';
 import {useApp} from '../../context/AppContext';
 import type {RootStackParamList} from '../../navigation/types';
 import type {ThemePreference} from '../../types';
 import {checkForUpdate, currentVersion} from '../../update/updateChecker';
+import {maskSecret, trimSecret} from '../../utils/secrets';
 
 export function SettingsScreen({
   navigation,
@@ -17,9 +18,19 @@ export function SettingsScreen({
 }) {
   const {theme, settings, updateSettings, profile, goal} = useApp();
   const [versionName, setVersionName] = useState('');
+  const [groqDraft, setGroqDraft] = useState('');
+  const [nvidiaDraft, setNvidiaDraft] = useState('');
   useEffect(() => {
     void currentVersion().then(setVersionName);
   }, []);
+
+  const saveKeys = () => {
+    const groqApiKey = trimSecret(groqDraft) || settings.groqApiKey;
+    const nvidiaApiKey = trimSecret(nvidiaDraft) || settings.nvidiaApiKey;
+    void updateSettings({...settings, groqApiKey, nvidiaApiKey});
+    setGroqDraft('');
+    setNvidiaDraft('');
+  };
   return (
     <Screen>
       <Text style={[styles.title, {color: theme.colors.ink}]}>Settings</Text>
@@ -55,16 +66,59 @@ export function SettingsScreen({
         <Text style={[styles.meta, {color: theme.colors.muted}]}>kg and cm. Other units can be added later.</Text>
       </Card>
       <Card>
-        <Text style={[styles.item, {color: theme.colors.ink}]}>AI</Text>
+        <Text style={[styles.item, {color: theme.colors.ink}]}>AI keys</Text>
         <Text style={[styles.meta, {color: theme.colors.muted}]}>
-          Primary {settings.primaryProvider} · Fallback {settings.fallbackProvider}
+          Keys stay on this phone. They are not shipped inside the APK.
+          Voice needs Groq. NVIDIA is the text fallback.
         </Text>
         <Text style={[styles.meta, {color: theme.colors.muted}]}>
-          Groq configured: {aiEnv.groqApiKey ? 'Yes' : 'No'}
+          Groq: {settings.groqApiKey ? `saved ${maskSecret(settings.groqApiKey)}` : 'not set'}
         </Text>
         <Text style={[styles.meta, {color: theme.colors.muted}]}>
-          NVIDIA configured: {aiEnv.nvidiaApiKey ? 'Yes' : 'No'}
+          NVIDIA: {settings.nvidiaApiKey ? `saved ${maskSecret(settings.nvidiaApiKey)}` : 'not set'}
         </Text>
+        <View style={styles.fields}>
+          <Input
+            label="Groq API key"
+            value={groqDraft}
+            onChangeText={setGroqDraft}
+            placeholder={settings.groqApiKey ? 'Paste a new Groq key to replace' : 'gsk_…'}
+            autoCapitalize="none"
+            autoCorrect={false}
+            autoComplete="off"
+            spellCheck={false}
+            secureTextEntry
+            textContentType="none"
+          />
+          <Input
+            label="NVIDIA API key"
+            value={nvidiaDraft}
+            onChangeText={setNvidiaDraft}
+            placeholder={settings.nvidiaApiKey ? 'Paste a new NVIDIA key to replace' : 'nvapi-…'}
+            autoCapitalize="none"
+            autoCorrect={false}
+            autoComplete="off"
+            spellCheck={false}
+            secureTextEntry
+            textContentType="none"
+          />
+        </View>
+        <View style={styles.row}>
+          <View style={styles.flex}>
+            <Button label="Save keys" onPress={saveKeys} />
+          </View>
+          <View style={styles.flex}>
+            <Button
+              label="Clear keys"
+              variant="ghost"
+              onPress={() => {
+                setGroqDraft('');
+                setNvidiaDraft('');
+                void updateSettings({...settings, groqApiKey: '', nvidiaApiKey: ''});
+              }}
+            />
+          </View>
+        </View>
         <View style={styles.row}>
           <Button
             label="Groq primary"
@@ -104,7 +158,7 @@ export function SettingsScreen({
         </View>
       </Card>
       <Text style={[styles.disclaimer, {color: theme.colors.faint}]}>
-        Energy expenditure and AI nutrition values are estimates. API keys in a mobile app are not secure; a public version should proxy Groq/NVIDIA through a backend.
+        Energy expenditure and AI nutrition values are estimates. Keys live in on-device storage, not in the downloadable APK. A rooted phone can still read them.
       </Text>
       <Button label="Developer" variant="ghost" onPress={() => navigation.navigate('Debug')} />
       <Button
@@ -123,6 +177,7 @@ const styles = StyleSheet.create({
   item: {fontSize: 16, fontWeight: '600'},
   meta: {fontSize: 13, marginTop: 4, lineHeight: 18},
   row: {flexDirection: 'row', gap: 8, marginTop: 12, flexWrap: 'wrap'},
+  fields: {gap: 12, marginTop: 12},
   flex: {flex: 1, minWidth: 120},
   disclaimer: {fontSize: 13, lineHeight: 19, marginVertical: 4},
 });

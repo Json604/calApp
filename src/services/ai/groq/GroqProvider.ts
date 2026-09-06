@@ -7,7 +7,7 @@ export class GroqProvider implements AIProvider {
   readonly id = 'groq' as const;
 
   constructor(
-    private readonly apiKey = aiEnv.groqApiKey,
+    private readonly apiKey = '',
     private readonly model = aiEnv.groqTextModel,
   ) {}
 

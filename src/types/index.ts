@@ -51,6 +51,8 @@ export interface AppSettings {
   groqTextModel: string;
   nvidiaTextModel: string;
   transcriptionModel: string;
+  groqApiKey: string;
+  nvidiaApiKey: string;
   showLastProvider: boolean;
   quickVoiceLogging: boolean;
 }

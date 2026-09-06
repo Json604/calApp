@@ -8,7 +8,7 @@ export class GroqTranscriptionProvider implements TranscriptionProvider {
   readonly id = 'groq';
 
   constructor(
-    private readonly apiKey = aiEnv.groqApiKey,
+    private readonly apiKey = '',
     private readonly model = aiEnv.groqTranscriptionModel,
   ) {}
 

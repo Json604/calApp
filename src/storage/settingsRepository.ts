@@ -19,6 +19,8 @@ export const defaultSettings = (): AppSettings => ({
   nvidiaTextModel: aiEnv.nvidiaTextModel || DEFAULT_NVIDIA_TEXT_MODEL,
   transcriptionModel:
     aiEnv.groqTranscriptionModel || DEFAULT_GROQ_TRANSCRIPTION_MODEL,
+  groqApiKey: '',
+  nvidiaApiKey: '',
   showLastProvider: false,
   quickVoiceLogging: false,
 });

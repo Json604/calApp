@@ -91,6 +91,28 @@ describe('ProviderManager failover', () => {
     }
   });
 
+  it('asks for Settings keys when no provider is configured', async () => {
+    const groq = mockProvider('groq', async () => {
+      throw new Error('should not run');
+    }, false);
+    const nvidia = mockProvider('nvidia', async () => {
+      throw new Error('should not run');
+    }, false);
+    const manager = new ProviderManager([groq, nvidia], () => ({
+      primary: 'groq',
+      fallback: 'nvidia',
+    }));
+    const result = await manager.generateStructured({
+      systemPrompt: 'x',
+      userText: 'three eggs',
+      parse: value => FoodExtractionSchema.parse(value),
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toMatch(/Settings/);
+    }
+  });
+
   it('returns a friendly error when both providers fail', async () => {
     const groq = mockProvider('groq', async () => {
       throw new ProviderFailure({
