@@ -1,6 +1,7 @@
 import {aiEnv} from '../../config/env';
 import type {AppSettings} from '../../types';
 import {trimSecret} from '../../utils/secrets';
+import {resolveGroqTextModel} from './models';
 import {GroqProvider} from './groq/GroqProvider';
 import {NvidiaProvider} from './nvidia/NvidiaProvider';
 import {ProviderManager} from './providerManager';
@@ -27,7 +28,9 @@ function manager(): ProviderManager {
   const fallback = settingsOverride?.fallbackProvider ?? aiEnv.fallbackProvider;
   const groq = new GroqProvider(
     trimSecret(settingsOverride?.groqApiKey),
-    settingsOverride?.groqTextModel ?? aiEnv.groqTextModel,
+    resolveGroqTextModel(
+      settingsOverride?.groqTextModel ?? aiEnv.groqTextModel,
+    ),
   );
   const nvidia = new NvidiaProvider(
     trimSecret(settingsOverride?.nvidiaApiKey),

@@ -84,6 +84,7 @@ export function ProgressScreen() {
           value={summary.weeksRemaining === null ? '—' : `~${summary.weeksRemaining} weeks`}
         />
         <Text style={[styles.meta, {color: theme.colors.faint, marginTop: 8}]}>
+          Averages skip days with no food logged, so a blank day is not counted as a fast.
           Energy expenditure and pace are estimates, not measurements.
         </Text>
       </Card>

@@ -41,12 +41,14 @@ export class ProviderManager {
 
     for (const provider of ordered) {
       if (!provider.isConfigured()) {
-        lastFailure = new ProviderFailure({
-          kind: 'not_configured',
-          provider: provider.id,
-          message: `${provider.id} is not configured`,
-          retryable: false,
-        });
+        if (!lastFailure) {
+          lastFailure = new ProviderFailure({
+            kind: 'not_configured',
+            provider: provider.id,
+            message: `${provider.id} is not configured`,
+            retryable: false,
+          });
+        }
         continue;
       }
 
@@ -74,7 +76,7 @@ export class ProviderManager {
     recordAiError(message, lastFailure?.provider);
     return {
       ok: false,
-      error: userFacing(message),
+      error: userFacing(message, lastFailure?.kind),
       kind: lastFailure?.kind ?? 'all_failed',
       lastProvider: lastFailure?.provider,
     };
@@ -146,9 +148,18 @@ function asFailure(error: unknown, provider: ProviderId): ProviderFailure {
   });
 }
 
-function userFacing(message: string): string {
-  if (/not configured/i.test(message)) {
+function userFacing(message: string, kind?: string): string {
+  if (kind === 'not_configured' || /not configured/i.test(message)) {
     return 'AI is not configured. Add API keys in Settings.';
+  }
+  if (
+    kind === 'unsupported_model' ||
+    /decommissioned|does not exist|model_not_found/i.test(message)
+  ) {
+    return 'The Groq text model was retired. CutLog will switch to a current one — try voice again.';
+  }
+  if (kind === 'timeout') {
+    return 'AI parsing timed out. Try a shorter log, or retry.';
   }
   return 'AI parsing is temporarily unavailable. You can still log this manually.';
 }

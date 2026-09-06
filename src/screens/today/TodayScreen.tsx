@@ -25,16 +25,23 @@ export function TodayScreen({
   const summary = useDailySummary();
   const [breakdown, setBreakdown] = useState(false);
   const energy = summary.energy;
-  const deficitLabel = energy
-    ? energy.isDeficit
+  const foodLogged = Boolean(energy?.foodLogged);
+  const deficitLabel = !energy || !foodLogged
+    ? 'Target'
+    : energy.isDeficit
       ? 'Deficit'
-      : 'Surplus'
-    : 'Balance';
-  const deficitColor = energy
-    ? energy.isDeficit
-      ? theme.colors.deficit
-      : theme.colors.surplus
-    : theme.colors.ink;
+      : 'Surplus';
+  const heroValue = !energy
+    ? '—'
+    : !foodLogged
+      ? `${energy.calorieTarget}`
+      : `${Math.abs(energy.balance)}`;
+  const deficitColor =
+    !energy || !foodLogged
+      ? theme.colors.ink
+      : energy.isDeficit
+        ? theme.colors.deficit
+        : theme.colors.surplus;
 
   return (
     <Screen>
@@ -51,8 +58,12 @@ export function TodayScreen({
       <Card onPress={() => setBreakdown(value => !value)} style={styles.energy}>
         <Metric
           label={deficitLabel}
-          value={energy ? `${Math.abs(energy.balance)}` : '—'}
-          hint="kcal  ·  estimated"
+          value={heroValue}
+          hint={
+            foodLogged
+              ? 'kcal  ·  estimated'
+              : 'kcal  ·  log food to see today’s deficit'
+          }
           large
           color={deficitColor}
         />
@@ -73,11 +84,15 @@ export function TodayScreen({
             <Row label="Activity" value={energy.activityCalories} />
             <Row label="Estimated burn" value={energy.estimatedDailyBurn} bold />
             <Row label="Food" value={energy.caloriesConsumed} />
-            <Row
-              label={energy.isDeficit ? 'Deficit' : 'Surplus'}
-              value={Math.abs(energy.balance)}
-              bold
-            />
+            {energy.foodLogged ? (
+              <Row
+                label={energy.isDeficit ? 'Deficit' : 'Surplus'}
+                value={Math.abs(energy.balance)}
+                bold
+              />
+            ) : (
+              <Row label="Target" value={energy.calorieTarget} bold />
+            )}
           </View>
         ) : null}
       </Card>

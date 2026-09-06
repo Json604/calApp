@@ -7,6 +7,20 @@ import {
   NVIDIA_BASE_URL,
   NVIDIA_TEXT_MODEL,
 } from '@env';
+import {
+  DEFAULT_GROQ_TEXT_MODEL,
+  DEFAULT_GROQ_TRANSCRIPTION_MODEL,
+  DEFAULT_NVIDIA_BASE_URL,
+  DEFAULT_NVIDIA_TEXT_MODEL,
+  resolveGroqTextModel,
+} from '../services/ai/models';
+
+export {
+  DEFAULT_GROQ_TEXT_MODEL,
+  DEFAULT_GROQ_TRANSCRIPTION_MODEL,
+  DEFAULT_NVIDIA_BASE_URL,
+  DEFAULT_NVIDIA_TEXT_MODEL,
+};
 
 /**
  * API keys are not read from @env. react-native-dotenv inlines static
@@ -21,11 +35,6 @@ function firstNonEmpty(...values: Array<string | undefined>): string {
   }
   return '';
 }
-
-export const DEFAULT_GROQ_TEXT_MODEL = 'llama-3.1-8b-instant';
-export const DEFAULT_GROQ_TRANSCRIPTION_MODEL = 'whisper-large-v3-turbo';
-export const DEFAULT_NVIDIA_TEXT_MODEL = 'meta/llama-3.1-8b-instruct';
-export const DEFAULT_NVIDIA_BASE_URL = 'https://integrate.api.nvidia.com/v1';
 
 export interface AiEnvConfig {
   groqTextModel: string;
@@ -42,10 +51,12 @@ function asProvider(value: string, fallback: ProviderId): ProviderId {
 
 export function loadAiEnvConfig(): AiEnvConfig {
   return {
-    groqTextModel: firstNonEmpty(
-      GROQ_TEXT_MODEL,
-      process.env.GROQ_TEXT_MODEL,
-      DEFAULT_GROQ_TEXT_MODEL,
+    groqTextModel: resolveGroqTextModel(
+      firstNonEmpty(
+        GROQ_TEXT_MODEL,
+        process.env.GROQ_TEXT_MODEL,
+        DEFAULT_GROQ_TEXT_MODEL,
+      ),
     ),
     groqTranscriptionModel: firstNonEmpty(
       GROQ_TRANSCRIPTION_MODEL,

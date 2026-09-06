@@ -81,6 +81,22 @@ describe('daily energy balance', () => {
     expect(energy.balance).toBe(energy.caloriesConsumed - energy.estimatedDailyBurn);
     expect(energy.balance).not.toBe(naive);
     expect(energy.isDeficit).toBe(true);
+    expect(energy.foodLogged).toBe(true);
+  });
+
+  it('does not treat an unlogged day as a fast', () => {
+    const energy = calculateDailyEnergy({
+      date: '2026-09-06',
+      profile,
+      goal,
+      foods: [],
+      workouts: [],
+      activities: [],
+    });
+    expect(energy.foodLogged).toBe(false);
+    expect(energy.caloriesConsumed).toBe(0);
+    expect(energy.estimatedDailyBurn).toBeGreaterThan(1500);
+    expect(energy.balance).toBe(-energy.estimatedDailyBurn);
   });
 });
 

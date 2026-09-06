@@ -14,6 +14,7 @@ export async function openaiChatJson(params: {
   model: string;
   request: StructuredRequest;
   extraHeaders?: Record<string, string>;
+  extraBody?: Record<string, unknown>;
 }): Promise<StructuredResult<unknown>> {
   const {provider, url, apiKey, model, request} = params;
   if (!apiKey) {
@@ -41,6 +42,7 @@ export async function openaiChatJson(params: {
       },
     ],
     response_format: {type: 'json_object'},
+    ...(params.extraBody ?? {}),
   };
 
   let response: Response;

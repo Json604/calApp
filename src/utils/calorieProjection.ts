@@ -2,19 +2,28 @@ import {KCAL_PER_KG_FAT} from '../constants/energy';
 import type {DailyEnergyBreakdown} from '../types';
 import {roundTo} from './units';
 
+function daysWithFoodLogged(days: DailyEnergyBreakdown[]): DailyEnergyBreakdown[] {
+  return days.filter(day => day.foodLogged);
+}
+
 export function averageBalance(days: DailyEnergyBreakdown[]): number | null {
-  if (days.length === 0) {
+  const logged = daysWithFoodLogged(days);
+  if (logged.length === 0) {
     return null;
   }
-  const sum = days.reduce((acc, day) => acc + day.balance, 0);
-  return roundTo(sum / days.length, 0);
+  const sum = logged.reduce((acc, day) => acc + day.balance, 0);
+  return roundTo(sum / logged.length, 0);
 }
 
 export function averageIntake(days: DailyEnergyBreakdown[]): number | null {
-  if (days.length === 0) {
+  const logged = daysWithFoodLogged(days);
+  if (logged.length === 0) {
     return null;
   }
-  return roundTo(days.reduce((acc, day) => acc + day.caloriesConsumed, 0) / days.length, 0);
+  return roundTo(
+    logged.reduce((acc, day) => acc + day.caloriesConsumed, 0) / logged.length,
+    0,
+  );
 }
 
 export function averageBurn(days: DailyEnergyBreakdown[]): number | null {

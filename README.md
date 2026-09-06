@@ -22,7 +22,7 @@ cp .env.example .env
 Model names can stay as-is:
 
 ```
-GROQ_TEXT_MODEL=llama-3.1-8b-instant
+GROQ_TEXT_MODEL=openai/gpt-oss-20b
 GROQ_TRANSCRIPTION_MODEL=whisper-large-v3-turbo
 
 NVIDIA_BASE_URL=https://integrate.api.nvidia.com/v1
@@ -40,7 +40,7 @@ https://cutlog.kartikey.xyz
 
 APK:
 
-https://cutlog.kartikey.xyz/downloads/cutlog-1.2.apk
+https://cutlog.kartikey.xyz/downloads/cutlog-1.3.apk
 
 After 1.1 is installed, the app checks `https://cutlog.kartikey.xyz/downloads/latest.json` on launch and offers to install newer APKs.
 

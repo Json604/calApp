@@ -138,7 +138,7 @@ async function parseWithAi(
     jsonHint,
     parse,
     temperature: 0.1,
-    timeoutMs: 14000,
+    timeoutMs: 20000,
   });
 
   if (!outcome.ok) {
@@ -154,7 +154,14 @@ async function parseWithAi(
     transcript: text,
     intent: outcome.data.intent as Intent,
   });
-  return toParsed(text, outcome.data, outcome.provider, context.savedFoods ?? []);
+  try {
+    return toParsed(text, outcome.data, outcome.provider, context.savedFoods ?? []);
+  } catch (error) {
+    return unknown(
+      text,
+      error instanceof Error ? error.message : 'Could not read the parsed entry.',
+    );
+  }
 }
 
 function schemaFor(context: ParseContext) {

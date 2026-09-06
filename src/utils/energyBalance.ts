@@ -74,6 +74,7 @@ export function calculateDailyEnergy(params: {
     proteinTargetG: goal.proteinTargetG,
     balance: roundCalories(balance),
     isDeficit: balance < 0,
+    foodLogged: foods.length > 0,
   };
 }
 

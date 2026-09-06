@@ -258,6 +258,7 @@ export interface DailyEnergyBreakdown {
   proteinTargetG: number;
   balance: number;
   isDeficit: boolean;
+  foodLogged: boolean;
 }
 
 export interface AiDebugState {

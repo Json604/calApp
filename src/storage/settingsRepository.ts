@@ -4,6 +4,7 @@ import {
   DEFAULT_NVIDIA_TEXT_MODEL,
   aiEnv,
 } from '../config/env';
+import {resolveGroqTextModel} from '../services/ai/models';
 import type {AppSettings} from '../types';
 import type {KeyValueStore} from './client';
 import {readJson, writeJson} from './jsonStore';
@@ -33,7 +34,13 @@ export function createSettingsRepository(store: KeyValueStore) {
         STORAGE_KEYS.settings,
         null,
       );
-      return {...defaultSettings(), ...(stored ?? {})};
+      const merged = {...defaultSettings(), ...(stored ?? {})};
+      const groqTextModel = resolveGroqTextModel(merged.groqTextModel);
+      const next = {...merged, groqTextModel};
+      if (stored && groqTextModel !== merged.groqTextModel) {
+        await writeJson(store, STORAGE_KEYS.settings, next);
+      }
+      return next;
     },
     async save(settings: AppSettings): Promise<void> {
       await writeJson(store, STORAGE_KEYS.settings, settings);

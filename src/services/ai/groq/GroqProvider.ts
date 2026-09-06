@@ -22,6 +22,9 @@ export class GroqProvider implements AIProvider {
       apiKey: this.apiKey,
       model: this.model,
       request,
+      extraBody: this.model.startsWith('openai/gpt-oss')
+        ? {reasoning_effort: 'low'}
+        : undefined,
     });
   }
 }

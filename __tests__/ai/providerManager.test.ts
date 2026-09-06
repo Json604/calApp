@@ -113,6 +113,32 @@ describe('ProviderManager failover', () => {
     }
   });
 
+  it('explains when Groq has retired the chat model', async () => {
+    const groq = mockProvider('groq', async () => {
+      throw new ProviderFailure({
+        kind: 'unsupported_model',
+        provider: 'groq',
+        message: 'The model `llama-3.1-8b-instant` has been decommissioned',
+      });
+    });
+    const nvidia = mockProvider('nvidia', async () => {
+      throw new Error('should not run');
+    }, false);
+    const manager = new ProviderManager([groq, nvidia], () => ({
+      primary: 'groq',
+      fallback: 'nvidia',
+    }));
+    const result = await manager.generateStructured({
+      systemPrompt: 'x',
+      userText: 'three eggs',
+      parse: value => FoodExtractionSchema.parse(value),
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toMatch(/retired/i);
+    }
+  });
+
   it('returns a friendly error when both providers fail', async () => {
     const groq = mockProvider('groq', async () => {
       throw new ProviderFailure({

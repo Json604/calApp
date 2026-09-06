@@ -45,7 +45,10 @@ export function classifyHttpFailure(
     });
   }
   if (status === 404 || status === 400) {
-    const unsupported = /model|not found|does not exist|unsupported/i.test(message);
+    const unsupported =
+      /model|not found|does not exist|unsupported|decommissioned|retired/i.test(
+        message,
+      );
     return new ProviderFailure({
       kind: unsupported ? 'unsupported_model' : 'malformed',
       provider,
@@ -82,18 +85,30 @@ export function extractChatText(payload: unknown): string {
     throw new Error('Empty provider payload');
   }
   const record = payload as {
-    choices?: Array<{message?: {content?: string | Array<{text?: string; type?: string}>}}>;
+    choices?: Array<{
+      message?: {
+        content?: string | Array<{text?: string; type?: string}>;
+        reasoning?: string;
+      };
+    }>;
     error?: {message?: string};
   };
   if (record.error?.message) {
     throw new Error(record.error.message);
   }
   const content = record.choices?.[0]?.message?.content;
-  if (typeof content === 'string') {
+  if (typeof content === 'string' && content.trim()) {
     return content;
   }
   if (Array.isArray(content)) {
-    return content.map(part => part.text ?? '').join('');
+    const joined = content.map(part => part.text ?? '').join('');
+    if (joined.trim()) {
+      return joined;
+    }
+  }
+  const reasoning = record.choices?.[0]?.message?.reasoning;
+  if (typeof reasoning === 'string' && reasoning.trim()) {
+    return reasoning;
   }
   throw new Error('Provider returned no text');
 }

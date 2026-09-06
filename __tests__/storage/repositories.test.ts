@@ -52,5 +52,18 @@ describe('local repositories', () => {
     expect(loaded.groqApiKey).toBe('gsk_test_key_value');
     expect(loaded.nvidiaApiKey).toBe('nvapi-test-key-value');
   });
+
+  it('migrates a retired Groq chat model saved in settings', async () => {
+    const repos = createRepositories(memoryStore());
+    await repos.migrate();
+    const initial = await repos.settings.get();
+    await repos.settings.save({
+      ...initial,
+      groqTextModel: 'llama-3.1-8b-instant',
+    });
+    const loaded = await repos.settings.get();
+    expect(loaded.groqTextModel).toBe('openai/gpt-oss-20b');
+  });
 });
+
 
